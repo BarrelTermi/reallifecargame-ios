@@ -17,8 +17,8 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Expo CLI and EAS CLI
-        run: npm install -g expo-cli eas-cli
+      - name: Install Expo CLI
+        run: npm install -g expo-cli
 
       - name: Generate App Config
         run: |
@@ -34,20 +34,31 @@ jobs:
           }' > app.json
 
       - name: Install Project Dependencies
-        run: npm install || npm install --legacy-peer-deps
+        run: npm install
 
-      - name: Build Native iOS Project
+      - name: Build Native iOS Folder
         run: npx expo prebuild --platform ios
 
-      - name: Create Unsigned IPA Package
+      - name: Compile Xcode Workspace
+        run: |
+          cd ios
+          xcodebuild -workspace RealLifeCarGame.xcworkspace \
+                     -scheme RealLifeCarGame \
+                     -configuration Debug \
+                     -sdk iphoneos \
+                     CODE_SIGNING_ALLOWED=NO \
+                     CODE_SIGNING_REQUIRED=NO \
+                     clean build
+
+      - name: Package into True IPA
         run: |
           mkdir -p build/Payload
-          mv ios/build/Build/Products/Debug-iphonesimulator/*.app build/Payload/ 2>/dev/null || mv ios/*.app build/Payload/ || mv ios/build/Build/Products/*/*.app build/Payload/ || true
+          cp -R ios/build/Build/Products/Debug-iphoneos/*.app build/Payload/ 2>/dev/null || cp -R ~/Library/Developer/Xcode/DerivedData/*/Build/Products/Debug-iphoneos/*.app build/Payload/ || true
           cd build
           zip -r ../RealLifeCarGame.ipa Payload
 
       - name: Upload Finished IPA Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: RealLifeCarGame-IPA
+          name: RealLifeCarGame-Native-IPA
           path: RealLifeCarGame.ipa
