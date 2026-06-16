@@ -42,8 +42,11 @@ jobs:
       - name: Compile Xcode Workspace
         run: |
           cd ios
-          xcodebuild -workspace RealLifeCarGame.xcworkspace \
-                     -scheme RealLifeCarGame \
+          WORKSPACE_NAME=$(ls -d *.xcworkspace | head -n 1)
+          SCHEME_NAME=$(basename "$WORKSPACE_NAME" .xcworkspace)
+          echo "Building Workspace: $WORKSPACE_NAME with Scheme: $SCHEME_NAME"
+          xcodebuild -workspace "$WORKSPACE_NAME" \
+                     -scheme "$SCHEME_NAME" \
                      -configuration Debug \
                      -sdk iphoneos \
                      CODE_SIGNING_ALLOWED=NO \
